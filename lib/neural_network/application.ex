@@ -10,7 +10,7 @@ defmodule NeuralNetwork.Application do
 
     # Define workers and child supervisors to be supervised
     children = [
-      worker(NeuralNetwork, [2, 3, 4, 5, 3, 2]),
+      worker(NeuralNetwork, [[2, 3, 4, 5, 3, ?z - ?a + 1]]),
       worker(OutputCollector, [])
       # Starts a worker by calling: NeuralNetwork.Worker.start_link(arg1, arg2, arg3)
       # worker(NeuralNetwork.Worker, [arg1, arg2, arg3]),
