@@ -29,6 +29,8 @@ defmodule NeuralNetwork.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [
+      {:task_awaiter, "~> 0.1.1", runtime: false}
+    ]
   end
 end

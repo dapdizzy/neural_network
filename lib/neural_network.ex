@@ -53,7 +53,7 @@ defmodule NeuralNetwork do
       end)
     # Assign the weights for relations between neurons of sibling layers
     {_, weights} =
-      layer_neurons
+      layer_neurons |> Enum.sort(fn {k1, _v1}, {k2, _v2} -> k1 <= k2 end)
       |> Enum.reduce({1, %{}}, fn {_layer, neurons}, {layer, weights_map} ->
         new_weights_map =
           if layer < number_of_levels do
@@ -145,7 +145,7 @@ defmodule NeuralNetwork do
     weight
   end
 
-  def sentense_to_words(sensetnse) do
+  def sentense_to_words(sentense) do
     ~r/\w+/i |> Regex.scan(sentense) |> Stream.map(fn [h|_t] -> h end) |> Enum.map(&(&1 |> String.downcase()))
   end
 
