@@ -5,7 +5,7 @@ defmodule NeuralNetwork do
 
   use GenServer
 
-  defstruct [:level_neurons, :neuron_level, :weights, :levels, :clear_neurons_map, :stuff]
+  defstruct [:level_neurons, :neuron_level, :neuron_activator, :weights, :levels, :clear_neurons_map, :stuff]
 
   # API
   def start_link(levels) do
@@ -70,16 +70,23 @@ defmodule NeuralNetwork do
           end
         {layer + 1, new_weights_map}
       end)
-    {:ok, %NeuralNetwork{level_neurons: layer_neurons, neuron_level: neuron_layer, weights: weights, levels: number_of_levels}}
+    neuron_activator = 2..Enum.count(layer_neurons)
+      |> Enum.reduce(%{}, fn layer, map ->
+        current_neurons = layer_neurons[layer]
+        preceding_neurons = layer_neurons[layer - 1]
+        current_neurons |> Enum.reduce(map, fn neuron, m -> m |> Map.put(neuron, Activator.create(preceding_neurons, neuron)) end)
+      end)
+    {:ok, %NeuralNetwork{level_neurons: layer_neurons, neuron_level: neuron_layer, neuron_activator: neuron_activator, weights: weights, levels: number_of_levels}}
   end
 
-  def handle_cast({:activated, neuron, value}, %NeuralNetwork{level_neurons: level_neurons_map, neuron_level: neuron_level_map, weights: weights_map, levels: levels} = state) do
+  def handle_cast({:activated, neuron, value}, %NeuralNetwork{level_neurons: level_neurons_map, neuron_level: neuron_level_map, neuron_activator: neuron_activator_map, weights: weights_map, levels: levels} = state) do
     neuron_level = neuron_level_map[neuron]
     if neuron_level < levels do
       weights = weights_map[neuron] # list of tuples {weight, neuron}
       weights
         |> Enum.each(fn {weight, next_neuron} ->
-          next_neuron |> Neuron.activate(value * weight) # value * weight is the signal sent to the next layer neuron
+          activator = neuron_activator_map[next_neuron]
+          activator |> Activator.accept(neuron, value * weight) # value * weight is the signal sent to the next layer neuron
         end)
     else
       OutputCollector.collect(value)

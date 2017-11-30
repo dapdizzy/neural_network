@@ -27,7 +27,7 @@ defmodule Activator do
       fn %Activator{signals: signals} = state ->
         total_signal = signals |> Stream.map(fn {_neuron, signal} -> signal end) |> Enum.sum()
         activated_neuron |> Neuron.activate(total_signal)
-        %{state|signals:%{}}
+        %{state|signals: %{}}
       end
    ])
     __MODULE__ |> GenServer.start_link([preceding_neurons, activated_neuron, threshold], gen_server_options)
@@ -39,17 +39,19 @@ defmodule Activator do
   end
 
   def accept(activator, neuron, signal) do
-    activator |> GenServer.cast({:activate, neuron, signal})
+    activator |> TaskAwaiter.task_completed({neuron, signal})
+     # |> GenServer.cast({:activate, neuron, signal})
   end
 
+  # No callbacks needed thus far. All the work is delegated to the TaskAwaiter module.
   # Callbacks
-  def init([preceding_neurons, activated_neuron, threshold]) do
-    {:ok, %Activator{preceding_neurons: preceding_neurons, threshold: threshold, activated_neuron: activated_neuron, signals: %{}}}
-  end
+  # def init([preceding_neurons, activated_neuron, threshold]) do
+  #   {:ok, %Activator{preceding_neurons: preceding_neurons, threshold: threshold, activated_neuron: activated_neuron, signals: %{}}}
+  # end
 
-  def handle_cast({:activate, neuron, signal}, %Activator{preceding_neurons: preceding_neurons, threshold: threshold, activated_neuron: activated_neuron, signals: signals} = state) do
-    upd_signals = signals |> Map.put(neuron, signal)
-
-    {:noreply, %{state|signals: upd_signals}}
-  end
+  # def handle_cast({:activate, neuron, signal}, %Activator{preceding_neurons: preceding_neurons, threshold: threshold, activated_neuron: activated_neuron, signals: signals} = state) do
+  #   upd_signals = signals |> Map.put(neuron, signal)
+  #
+  #   {:noreply, %{state|signals: upd_signals}}
+  # end
 end
